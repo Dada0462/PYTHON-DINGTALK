@@ -87,7 +87,32 @@ def send_feedcard(Msglist):
         print('send_feedcard函数执行失败.')
 
 
-def DingTalk_send(Msgtype,Msgtext,access_token ):
+def DingTalk_send(Msgtext = None,Msgmarkdown = None,Msgactcard = None,Msglink = None,Msglist = None,access_token =  '72384c1ba8a7f2a183ed9b41baf399faa168e2657c117915e05725298b1e777f'):
+    # access_token为对接机器人的身份信息
+
+    print('开始发送钉钉群信息.....')
+    url = 'https://oapi.dingtalk.com/robot/send'
+    Headers = {"content-Type": "application/json"} # 官方指定headers
+    access_token = {'access_token': access_token }
+    if Msgtext != None:
+        Msg = send_text(Msgtext)
+    elif Msgmarkdown != None:
+        Msg = send_markdown(Msgmarkdown)
+    elif Msgactcard != None:
+        Msg = send_actcard(Msgactcard)
+    elif Msglink != None:
+        Msg = send_link(Msglink)
+    elif Msglist != None:
+        Msg = send_feedcard(Msglist)
+    else:
+        print('参数输入有误。')
+    Msg = json.dumps(Msg)
+    res = requests.post(url, data=Msg, headers=Headers, params=access_token)
+    print('钉钉群信息发送完成。')
+
+
+
+def DingTalk_Send(Msgtype,Msgtext,access_token ):
     # Msgtype可选 0表示text类型,1表示markdown类型，2表示Msgactcard，3表示Msglink，4表示Msglist
 	# #Msgtext为要发的内容，与类型对应，
 	#详见https://dingtalk.taobao.com/docs/doc.htm?spm=a219a.7629140.0.0.XkO6sE&treeId=257&articleId=105735&docType=1
@@ -109,9 +134,9 @@ def DingTalk_send(Msgtype,Msgtext,access_token ):
         elif Msgtype == 1:
             Msg = send_markdown(Msgtext)
         elif Msgtype == 2 :
-            Msg = send_actcard(Msgatext)
+            Msg = send_actcard(Msgtext)
         elif Msgtype == 3:
-            Msg = send_link(Msgltext)
+            Msg = send_link(Msgtext)
         elif Msgtype == 4:
             Msg = send_feedcard(Msgtext)
         else:
