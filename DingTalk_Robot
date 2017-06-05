@@ -87,7 +87,7 @@ def send_feedcard(Msglist):
         print('send_feedcard函数执行失败.')
 
 
-def DingTalk_send(Msgtype,Msgtext,access_token = ):
+def DingTalk_send(Msgtype,Msgtext,access_token ):
     # Msgtype可选 0表示text类型,1表示markdown类型，2表示Msgactcard，3表示Msglink，4表示Msglist
 	# #Msgtext为要发的内容，与类型对应，
 	#详见https://dingtalk.taobao.com/docs/doc.htm?spm=a219a.7629140.0.0.XkO6sE&treeId=257&articleId=105735&docType=1
@@ -102,21 +102,22 @@ def DingTalk_send(Msgtype,Msgtext,access_token = ):
     url = 'https://oapi.dingtalk.com/robot/send'
     Headers = {"content-Type": "application/json"} # 官方指定headers
     access_token = {'access_token': access_token }
-	try:
-		if Msgtype == 0：
-			Msg = send_text(Msgtext)
-		else if Msgtype == 1：
-			Msg = send_markdown(Msgtext)
-		else if Msgtype == 2：
-			sg = send_actcard(Msgatext)
-		else if Msgtype == 3：
-			Msg = send_link(Msgltext)
-		else if Msgtype == 4：
-			Msg = send_feedcard(Msgtext) 
-		else:
-			print('类别参数输入有误。')
-	except:
-		print('钉钉群信息发送失败。')
+
+    try:
+        if Msgtype == 0:
+            Msg = send_text(Msgtext)
+        elif Msgtype == 1:
+            Msg = send_markdown(Msgtext)
+        elif Msgtype == 2 :
+            Msg = send_actcard(Msgatext)
+        elif Msgtype == 3:
+            Msg = send_link(Msgltext)
+        elif Msgtype == 4:
+            Msg = send_feedcard(Msgtext)
+        else:
+            print('类别参数输入有误。')
+    except:
+        print('钉钉群信息发送失败。')
     Msg = json.dumps(Msg)
     res = requests.post(url, data=Msg, headers=Headers, params=access_token)
     print('钉钉群信息发送完成。')
