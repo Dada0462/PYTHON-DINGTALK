@@ -1,0 +1,125 @@
+# -*- coding: utf-8 -*-
+"""
+Created on 2017-6-04
+
+@author: Dada
+"""
+
+import requests
+import json
+
+def send_text(Msgtext):
+    #Msgtext要求为文本信息
+    print('开始执行send_text函数')
+    try:
+        if isinstance(Msgtext,str) == False:
+            Msgtext = str(Msgtext)
+
+        String_textMsg = {"msgtype": "text",
+                            "text":{"content":Msgtext},
+                            "at": {"isAtAll":'true'}}
+        print('send_text函数执行完成.')
+        return String_textMsg
+    except:
+        print('send_text函数执行失败.')
+
+
+
+def send_markdown(Msgmarkdown):
+    #Msgmarkdown要求为字典，必须包含键：'title','text'
+    print('开始执行send_markdown函数')
+    try:
+        if isinstance(Msgmarkdown,dict) == True:
+            String_textMsg = {"msgtype": "markdown",
+                              "markdown": Msgmarkdown }
+            print('send_markdown函数执行完成.')
+            return String_textMsg
+        else:
+            print('参数不符合标准.')
+    except:
+        print('send_markdown函数执行失败.')
+
+
+def send_actcard(Msgactcard):
+    #Msgmarkdown要求为字典，必须包含键：'title','text'
+    print('开始执行send_actcard函数')
+    try:
+        if isinstance(Msgactcard,dict) == True:
+            String_textMsg = {"msgtype": "actionCard",
+                              "actionCard": Msgactcard }
+            print('send_actcard函数执行完成.')
+            return String_textMsg
+        else:
+            print('参数不符合标准.')
+    except:
+        print('send_actcard函数执行失败.')
+
+
+def send_link(Msglink):
+    #Msglink要求为字典,字典中键必须包含：'title','messageURL','picURL','text'
+    print('开始执行send_link函数')
+    try:
+        if isinstance(Msglink,dict) == True:
+            String_Msg ={"link": Msglink ,
+                         "msgtype": "link"}
+            print('send_link函数执行完成')
+            return String_Msg
+        else:
+            print('参数不符合标准.')
+    except:
+        print('send_link函数执行失败.')
+
+
+
+
+def send_feedcard(Msglist):
+    #Msgdict要求为包含字典的列表,字典中键值对的数量》=3，且键必须包含：'title','messageURL','picURL'
+    print('开始执行send_feedcard函数')
+    try:
+        if isinstance(Msglist,list) == True:
+            String_Msg ={"feedCard": {"links": Msglist},
+                         "msgtype": "feedCard"}
+            print('send_feedcard函数执行完成')
+            return String_Msg
+        else:
+            print('参数不符合标准.')
+    except:
+        print('send_feedcard函数执行失败.')
+
+
+def DingTalk_send(Msgtype,Msgtext,access_token = ):
+    # Msgtype可选 0表示text类型,1表示markdown类型，2表示Msgactcard，3表示Msglink，4表示Msglist
+	# #Msgtext为要发的内容，与类型对应，
+	#详见https://dingtalk.taobao.com/docs/doc.htm?spm=a219a.7629140.0.0.XkO6sE&treeId=257&articleId=105735&docType=1
+	#									0-文本，
+	#									1-字典（键：'title','text'），
+	#									2-字典（键：'title','text'），
+	#									3-字典（键：'title','messageURL','picURL','text'），
+	#									4-列表，列表内每一项都是字典，键：'title','messageURL','picURL'
+	# access_token为所要发送的机器人的webhook地址
+
+    print('开始发送钉钉群信息.....')
+    url = 'https://oapi.dingtalk.com/robot/send'
+    Headers = {"content-Type": "application/json"} # 官方指定headers
+    access_token = {'access_token': access_token }
+	try:
+		if Msgtype == 0：
+			Msg = send_text(Msgtext)
+		else if Msgtype == 1：
+			Msg = send_markdown(Msgtext)
+		else if Msgtype == 2：
+			sg = send_actcard(Msgatext)
+		else if Msgtype == 3：
+			Msg = send_link(Msgltext)
+		else if Msgtype == 4：
+			Msg = send_feedcard(Msgtext) 
+		else:
+			print('类别参数输入有误。')
+	except:
+		print('钉钉群信息发送失败。')
+    Msg = json.dumps(Msg)
+    res = requests.post(url, data=Msg, headers=Headers, params=access_token)
+    print('钉钉群信息发送完成。')
+
+if __name__ =='__mian__':
+    pass
