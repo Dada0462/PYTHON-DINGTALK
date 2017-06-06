@@ -94,21 +94,24 @@ def DingTalk_send(Msgtext = None,Msgmarkdown = None,Msgactcard = None,Msglink = 
     url = 'https://oapi.dingtalk.com/robot/send'
     Headers = {"content-Type": "application/json"} # 官方指定headers
     access_token = {'access_token': access_token }
-    if Msgtext != None:
-        Msg = send_text(Msgtext)
-    elif Msgmarkdown != None:
-        Msg = send_markdown(Msgmarkdown)
-    elif Msgactcard != None:
-        Msg = send_actcard(Msgactcard)
-    elif Msglink != None:
-        Msg = send_link(Msglink)
-    elif Msglist != None:
-        Msg = send_feedcard(Msglist)
-    else:
-        print('参数输入有误。')
-    Msg = json.dumps(Msg)
-    res = requests.post(url, data=Msg, headers=Headers, params=access_token)
-    print('钉钉群信息发送完成。')
+    try:
+        if Msgtext != None:
+            Msg = send_text(Msgtext)
+        elif Msgmarkdown != None:
+            Msg = send_markdown(Msgmarkdown)
+        elif Msgactcard != None:
+            Msg = send_actcard(Msgactcard)
+        elif Msglink != None:
+            Msg = send_link(Msglink)
+        elif Msglist != None:
+            Msg = send_feedcard(Msglist)
+        Msg = json.dumps(Msg)
+        res = requests.post(url, data=Msg, headers=Headers, params=access_token)
+        print('钉钉群信息发送完成。')
+    except:
+        print('钉钉群信息发送失败。')
+
+
 
 
 
@@ -139,13 +142,12 @@ def DingTalk_Send(Msgtype,Msgtext,access_token ):
             Msg = send_link(Msgtext)
         elif Msgtype == 4:
             Msg = send_feedcard(Msgtext)
-        else:
-            print('类别参数输入有误。')
+        Msg = json.dumps(Msg)
+        res = requests.post(url, data=Msg, headers=Headers, params=access_token)
+        print('钉钉群信息发送完成。')
     except:
         print('钉钉群信息发送失败。')
-    Msg = json.dumps(Msg)
-    res = requests.post(url, data=Msg, headers=Headers, params=access_token)
-    print('钉钉群信息发送完成。')
+
 
 if __name__ =='__mian__':
     pass
