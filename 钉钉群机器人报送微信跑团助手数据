@@ -1,0 +1,205 @@
+
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jun  1 17:17:09 2018
+
+@author: Administrator
+"""
+
+
+
+#导入模块
+import requests
+import json
+import datetime,time
+import numpy as np
+import pandas as pd
+import setting
+import os
+
+
+class Wechat_Runner():
+
+    def __init__(self):
+        #初始化，传入参数
+        print('开始初始化.......')
+
+        #模拟微信内置浏览器
+        User_Agent = setting.User_Agent
+        
+        self.headers = {'User-Agent': User_Agent}
+        
+        self.per_runner_record = {}
+        self.runners_record = {}
+
+        print('初始化完成。')
+        
+    def login_in(self):
+
+        print('开始登陆......')
+        busername =setting.busername
+        bpassword = setting.bpassword
+        login_url = 'http://wechat.paobuqu.com/site/login'
+        data = {'LoginForm%5Busername%5D':busername,
+        'LoginForm%5Bpassword%5D':bpassword,
+        'Referer': 'http://wechat.paobuqu.com/wechat/#/runner/me'}
+        login_html = s.post(login_url,headers = self.headers,data = data)
+                           # cookies = self.cookies)
+        my_url = 'http://wechat.paobuqu.com/wechat/runner/me.html?version=xxx1211'
+        s.post(my_url,headers = self.headers)
+        print('登陆成功，进入主页。')
+
+
+    def get_per_runner_record(self):
+
+        print('开始获取成员运动数据........')
+        dara_url = 'http://wechat.paobuqu.com/runners/chartdata'
+        timec = str(int(time.mktime(time.localtime()))) + str((datetime.datetime.now().microsecond))[3:]
+        typelist = ['year','month','week','seven']
+        payload = {'t':timec }
+        #默认获取每日的数据。0为年数据，1为月数据，2为周数据，3为日数据
+        for runner in runner_list:
+            runner_record_dict = {}
+            for type in ['seven']:   #typelist
+                runner_record = {}
+                datatxt = {'type': type ,
+                    'uid' : runner['uid']}
+                memb_html = s.post(dara_url, headers=self.headers, data=datatxt, params=payload)
+                record = json.loads(memb_html.text)
+                
+                xaxis,series= list(record['xAxis'][1:-1].replace('"', '').split(',')),list(record['series'][1:-1].split(','))
+                for index in range(len(xaxis)):
+                    runner_record[xaxis[index]] = series[index]
+                runner_record_dict[(type+'hist') ] = runner_record
+
+                # time.sleep(5)
+            self.per_runner_record[runner['uid']]= runner_record_dict
+
+
+    def get_runners_record(self):
+        print('开始获取成员运动数据........')
+
+        dara_url = 'http://wechat.paobuqu.com/clubs/SSMP/chartdata'
+        typelist = ['year', 'month', 'week', 'seven']
+        # 默认获取每日的数据。0为年数据，1为月数据，2为周数据，3为日数据
+        for type in typelist:
+            runner_record ,runner_record_dict = {},{}
+            datatxt = {'clubid': '3776',
+                'type': type,
+                'mileage_type': 'run'}
+            count_html = s.post(dara_url, headers=self.headers, data=datatxt)
+            record = json.loads(count_html.text)
+            xaxis,series= list(record['xAxis'][1:-1].replace('"', '').split(',')),list(record['series'][1:-1].split(','))
+            for index in range(len(xaxis)):
+                runner_record[xaxis[index]] = series[index]
+            runner_record_dict[(type+'hist') ] = runner_record
+
+                # time.sleep(5)
+            self.runners_record[str(type+'hist')] = runner_record
+
+        print('数据获取成功。')
+
+def msg_return_from_tuling(text):   #格式
+#生成需要发送到钉钉上的信息内容
+    text = str(text)
+    APIkey = 'bc80852fcb2341f18e55c5de72287293'
+    raw_TULINURL = 'http://www.tuling123.com/openapi/api?key=' + APIkey
+    TULINURL = raw_TULINURL + '&info=' + text
+    response = requests.get(TULINURL)
+    response = response.text
+    Msgtext = response[response.find("text")+7:-2]
+    return Msgtext
+
+def send_msg2dingding(Msgtext,Access_token):
+    #经由钉钉提供的官方API发送信息
+    print('开始发送信息........')
+    url = 'https://oapi.dingtalk.com/robot/send'  #固定接口地址
+    access_token = {'access_token':Access_token}
+    Headers = {"content-Type":"application/json"}   #固定表头
+    String_textMsg = {"msgtype": "text",
+                          "text":{"content":Msgtext},
+                          "at": {"isAtAll":'true'} }
+
+    String_textMsg = json.dumps(String_textMsg)
+    res = requests.post(url,data = String_textMsg,headers =Headers,params= access_token )
+    print('信息已发送。')
+
+    
+
+def read_csv(Path):
+ 
+    data_before=  pd.read_csv(Path,sep =',', engine='python')
+        
+    del data_before['Unnamed: 0']
+    data_before = data_before.reindex(dateindex)
+    return data_before.reindex(dateindex)
+
+def write_csv(Path,Data_before):
+
+    data ={}
+    data_before = Data_before.reindex(dateindex)
+    for runner in runner_list:
+        uid = runner['uid']
+        col_b = data_before[str(uid)]
+        col = pd.Series(record[uid]['sevenhist'],index = dateindex)
+        col = np.where(pd.isnull(col_b),col,col_b)
+        data[uid] = col
+    df = pd.DataFrame(data,index= dateindex,dtype='float')  
+    df.to_csv(Path,sep =',')
+    return df
+
+def msg_text( Runner_list,Df):
+
+    msg_text = '早上好！今天是公益跑第' + str(delta) + '天。截至今日数据如下：'  + '\n'
+    Goaltext = '跑了 %(Day).0f 天,累计 %(Mile).2f 公里，计划 %(Goal).2f KM,已完成 %(Per).2f %% 。'
+    for runner in Runner_list:
+        if runner.get('goal'):
+            uid = runner['uid']
+            name = runner.get('name') if runner.get('name') else runner['nick_name']
+            goal = runner['goal'] 
+            sumday = Df[uid].dropna().count()
+            summile = Df[uid].dropna().sum()
+            per = float(summile)/float(goal)*100
+            msg_text = msg_text + name + Goaltext % {'Day':sumday, 'Mile': summile, 'Goal':goal, 'Per': per}  + '\n'
+    print( msg_text )
+    return msg_text
+
+	
+	
+	
+	
+	
+if __name__ == '__main__':
+    s = requests.session()
+    
+    path = setting.path
+    filename = setting.filename
+    cwd = os.getcwd()
+    path = cwd + filename
+    access_token = setting.access_token
+    
+    runner_list = setting.runner_list
+    dateindex = []
+    startday = datetime.date(2018,5,26)
+    for delta in range(100):
+        day = startday + datetime.timedelta(days = delta)
+        dateindex.append(day.strftime('%m-%d'))
+    today = datetime.date.today()
+    delta = (today-startday).days + 1
+    today= today.strftime('%m-%d')
+        
+
+
+    paotuan = Wechat_Runner()
+    paotuan.login_in()
+    paotuan.get_per_runner_record()
+    record = paotuan.per_runner_record
+    #paotuan.get_runners_record()
+    #Record = paotuan.runners_record
+    data_before = read_csv(path)
+    df = write_csv(path,data_before)
+    msg_text= msg_text(runner_list,df)
+    send_msg2dingding(msg_text,access_token)
+    
+    
+
