@@ -127,17 +127,14 @@ def send_msg2dingding(Msgtext,Access_token):
     
 
 def read_csv(Path):
- 
-    data_before=  pd.read_csv(Path,sep =',', engine='python')
-        
-    del data_before['Unnamed: 0']
-    data_before = data_before.reindex(dateindex)
-    return data_before.reindex(dateindex)
+    path = Path
+    data_before=  pd.read_csv(path,sep =',', engine='python')
+    data_before.set_index('Unnamed: 0')
+    return data_before
 
 def write_csv(Path,Data_before):
-
+    path,data_before =Path,Data_before
     data ={}
-    data_before = Data_before.reindex(dateindex)
     for runner in runner_list:
         uid = runner['uid']
         col_b = data_before[str(uid)]
@@ -145,7 +142,7 @@ def write_csv(Path,Data_before):
         col = np.where(pd.isnull(col_b),col,col_b)
         data[uid] = col
     df = pd.DataFrame(data,index= dateindex,dtype='float')  
-    df.to_csv(Path,sep =',')
+    df.to_csv(path,sep =',')
     return df
 
 def msg_text( Runner_list,Df):
@@ -160,7 +157,8 @@ def msg_text( Runner_list,Df):
             sumday = Df[uid].dropna().count()
             summile = Df[uid].dropna().sum()
             per = float(summile)/float(goal)*100
-            msg_text = msg_text + name + Goaltext % {'Day':sumday, 'Mile': summile, 'Goal':goal, 'Per': per}  + '\n'
+            if summile != 0:
+                msg_text = msg_text + name + Goaltext % {'Day':sumday, 'Mile': summile, 'Goal':goal, 'Per': per}  + '\n'
     print( msg_text )
     return msg_text
 
